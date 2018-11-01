@@ -115,6 +115,7 @@ OpenRC::OpenRC(const std::shared_ptr<Registry::Impl>& registry)
     : Base(registry)
 {
     // TODO STUB
+    g_debug("OpenRC constructor stub called...");
 }
 
 OpenRC::~OpenRC()
@@ -314,9 +315,12 @@ std::shared_ptr<Application::Instance> OpenRC::launch(
         tracepoint(ubuntu_app_launch, handshake_complete, appIdStr.c_str());
 
         // From https://stackoverflow.com/a/5797901
+        g_debug("argv:");
         const char **argv = new const char* [commands.size()+1];   // extra room for sentinel
-        for (int j = 0;  j < (int)commands.size();  ++j)     // copy args
+        for (int j = 0;  j < (int)commands.size();  ++j) {     // copy args
                 argv [j] = commands[j].c_str();
+                g_debug(commands[j].c_str());
+        }
         argv [commands.size()+1] = NULL;  // end of arguments sentinel is NULL
 
         // Convert env to C style
@@ -328,7 +332,7 @@ std::shared_ptr<Application::Instance> OpenRC::launch(
             envVar += elem.first;
             envVar += "=";
             envVar += elem.second;
-
+            g_debug(envVar.c_str());
             env_c[j] = envVar.c_str();
             j++;
         }
@@ -337,9 +341,14 @@ std::shared_ptr<Application::Instance> OpenRC::launch(
         pid_t child_pid = fork();
         if(child_pid == 0) {
             /* Call the job start function */
+            g_debug("argv[0]:");
+            g_debug(argv[0]);
             execvpe(argv[0], (char **) argv, (char **) env_c);
             g_debug("execvpe failed from child.");
+            g_debug("errno: %d", errno);
+            g_debug(strerror(errno));
         }
+        g_debug("child_pid: %d", child_pid);
 
         tracepoint(ubuntu_app_launch, libual_start_message_sent, appIdStr.c_str());
 
@@ -358,7 +367,7 @@ std::shared_ptr<Application::Instance> OpenRC::existing(const AppID& appId,
 std::vector<std::shared_ptr<instance::Base>> OpenRC::instances(const AppID& appID, const std::string& job)
 {
     // TODO: STUB
-
+    g_debug("instances stub called...");
     std::vector<std::shared_ptr<instance::Base>> instances;
     g_debug("Found %d instances for AppID '%s'", int(instances.size()), std::string(appID).c_str());
 
@@ -368,7 +377,7 @@ std::vector<std::shared_ptr<instance::Base>> OpenRC::instances(const AppID& appI
 std::list<std::string> OpenRC::runningAppIds(const std::list<std::string>& allJobs)
 {
     // TODO: STUB
-
+    g_debug("runningAppIds stub called...");
     std::set<std::string> appids;
     return {appids.begin(), appids.end()};
 }
@@ -376,20 +385,21 @@ std::list<std::string> OpenRC::runningAppIds(const std::list<std::string>& allJo
 pid_t OpenRC::unitPrimaryPid(const AppID& appId, const std::string& job, const std::string& instance)
 {
     // TODO: STUB
-
+    g_debug("unitPrimaryPid stub called...");
     return 0;
 }
 
 std::vector<pid_t> OpenRC::unitPids(const AppID& appId, const std::string& job, const std::string& instance)
 {
     // TODO: STUB
-
+    g_debug("unitPids stub called...");
     return {};
 }
 
 void OpenRC::stopUnit(const AppID& appId, const std::string& job, const std::string& instance)
 {
     // TODO: STUB
+    g_debug("stopUnit stub called...");
 }
 
 core::Signal<const std::string&, const std::string&, const std::string&>& OpenRC::jobStarted()
@@ -407,7 +417,7 @@ core::Signal<const std::string&, const std::string&, const std::string&>& OpenRC
 core::Signal<const std::string&, const std::string&, const std::string&, Registry::FailureType>& OpenRC::jobFailed()
 {
     // TODO: STUB
-
+    g_debug("jobFailed stub called...");
     return sig_jobFailed;
 }
 
