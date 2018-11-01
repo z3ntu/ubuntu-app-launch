@@ -29,6 +29,7 @@
 #include "helper-impl.h"
 #include "jobs-base.h"
 #include "jobs-systemd.h"
+#include "jobs-openrc.h"
 #include "registry-impl.h"
 #include "string-util.h"
 
@@ -57,8 +58,10 @@ Base::~Base()
     one right now. */
 std::shared_ptr<Base> Base::determineFactory(const std::shared_ptr<Registry::Impl>& registry)
 {
-    g_debug("Building a systemd jobs manager");
-    return std::make_shared<jobs::manager::SystemD>(registry);
+//     g_debug("Building a systemd jobs manager");
+//     return std::make_shared<jobs::manager::SystemD>(registry);
+    g_debug("Building a OpenRC jobs manager");
+    return std::make_shared<jobs::manager::OpenRC>(registry);
 }
 
 const std::list<std::string>& Base::getAllApplicationJobs() const
