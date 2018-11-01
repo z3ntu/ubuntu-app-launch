@@ -65,6 +65,10 @@ public:
     virtual core::Signal<const std::string&, const std::string&, const std::string&, Registry::FailureType>& jobFailed()
         override;
 
+    pid_t unitPrimaryPid(const AppID& appId, const std::string& job, const std::string& instance);
+    std::vector<pid_t> unitPids(const AppID& appId, const std::string& job, const std::string& instance);
+    void stopUnit(const AppID& appId, const std::string& job, const std::string& instance);
+
 private:
 //     std::string cgroup_root_;
 // 
@@ -120,12 +124,12 @@ private:
 //     UnitInfo unitNew(const std::string& name, const std::string& path, const std::shared_ptr<GDBusConnection>& bus);
 //     void unitRemoved(const std::string& name, const std::string& path);
 // 
-//     static std::string findEnv(const std::string& value, std::list<std::pair<std::string, std::string>>& env);
-//     static void removeEnv(const std::string& value, std::list<std::pair<std::string, std::string>>& env);
-//     static void copyEnv(const std::string& envname, std::list<std::pair<std::string, std::string>>& env);
-//     static void copyEnvByPrefix(const std::string& prefix, std::list<std::pair<std::string, std::string>>& env);
-//     static int envSize(std::list<std::pair<std::string, std::string>>& env);
-// 
+    static std::string findEnv(const std::string& value, std::list<std::pair<std::string, std::string>>& env);
+    static void removeEnv(const std::string& value, std::list<std::pair<std::string, std::string>>& env);
+    static void copyEnv(const std::string& envname, std::list<std::pair<std::string, std::string>>& env);
+    static void copyEnvByPrefix(const std::string& prefix, std::list<std::pair<std::string, std::string>>& env);
+    static int envSize(std::list<std::pair<std::string, std::string>>& env);
+
     static std::vector<std::string> parseExec(std::list<std::pair<std::string, std::string>>& env);
 //     static void application_start_cb(GObject* obj, GAsyncResult* res, gpointer user_data);
 // 

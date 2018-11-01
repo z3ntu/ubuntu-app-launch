@@ -113,15 +113,46 @@ namespace manager
 
 OpenRC::OpenRC(const std::shared_ptr<Registry::Impl>& registry)
     : Base(registry)
-    , handle_unitNew(DBusSignalUnsubscriber{})
-    , handle_unitRemoved(DBusSignalUnsubscriber{})
-    , handle_appFailed(DBusSignalUnsubscriber{})
 {
     // TODO STUB
 }
 
 OpenRC::~OpenRC()
 {
+}
+
+void OpenRC::copyEnv(const std::string& envname, std::list<std::pair<std::string, std::string>>& env)
+{
+    if (!findEnv(envname, env).empty())
+    {
+        g_debug("Already a value set for '%s' ignoring", envname.c_str());
+        return;
+    }
+
+    auto cvalue = getenv(envname.c_str());
+    g_debug("Copying Environment: %s", envname.c_str());
+    if (cvalue != nullptr)
+    {
+        std::string value{cvalue};
+        env.emplace_back(std::make_pair(envname, value));
+    }
+    else
+    {
+        g_debug("Unable to copy environment '%s'", envname.c_str());
+    }
+}
+
+void OpenRC::copyEnvByPrefix(const std::string& prefix, std::list<std::pair<std::string, std::string>>& env)
+{
+    for (unsigned int i = 0; environ[i] != nullptr; i++)
+    {
+        if (g_str_has_prefix(environ[i], prefix.c_str()))
+        {
+            std::string envname = environ[i];
+            envname.erase(envname.find('='));
+            copyEnv(envname, env);
+        }
+    }
 }
 
 std::shared_ptr<Application::Instance> OpenRC::launch(
@@ -239,11 +270,11 @@ std::shared_ptr<Application::Instance> OpenRC::launch(
         {
             // TODO: Handle???
             g_debug("Commands stuff is empty!!");
-            return;
+            return nullptr;
         }
-        
-        std::vector<const char *> args(commands.size());
-        std::transform(commands.begin(), commands.end(), args.begin(), std::mem_fun_ref(&std::string::c_str));
+
+//         std::vector<const char *> args(commands.size());
+//         std::transform(commands.begin(), commands.end(), args.begin(), std::mem_fun_ref(&std::string::c_str));
 
         /* Working Directory */
         if (!findEnv("APP_DIR", env).empty())
@@ -277,16 +308,34 @@ std::shared_ptr<Application::Instance> OpenRC::launch(
         }
 
         auto retval = std::make_shared<instance::OpenRC>(appId, job, instance, urls, reg);
-        auto chelper = new StartCHelper{};
-        chelper->ptr = retval;
-        chelper->bus = reg->_dbus;
 
         tracepoint(ubuntu_app_launch, handshake_wait, appIdStr.c_str());
         starting_handshake_wait(handshake);
         tracepoint(ubuntu_app_launch, handshake_complete, appIdStr.c_str());
 
+        // From https://stackoverflow.com/a/5797901
+        const char **argv = new const char* [commands.size()+1];   // extra room for sentinel
+        for (int j = 0;  j < (int)commands.size();  ++j)     // copy args
+                argv [j] = commands[j].c_str();
+        argv [commands.size()+1] = NULL;  // end of arguments sentinel is NULL
+
+        // Convert env to C style
+        const char **env_c = new const char* [env.size()+1];   // extra room for sentinel
+
+        int j = 0;
+        for (auto elem : env) {
+            std::string envVar;
+            envVar += elem.first;
+            envVar += "=";
+            envVar += elem.second;
+
+            env_c[j] = envVar.c_str();
+            j++;
+        }
+        env_c[env.size()+1] = NULL;  // end of arguments sentinel is NULL
+
         /* Call the job start function */
-        execvpe(commands[0].c_str(), args.data(), env);
+        execvpe(argv[0], (char **) argv, (char **) env_c);
 
         tracepoint(ubuntu_app_launch, libual_start_message_sent, appIdStr.c_str());
 
@@ -305,7 +354,7 @@ std::shared_ptr<Application::Instance> OpenRC::existing(const AppID& appId,
 std::vector<std::shared_ptr<instance::Base>> OpenRC::instances(const AppID& appID, const std::string& job)
 {
     // TODO: STUB
-    
+
     std::vector<std::shared_ptr<instance::Base>> instances;
     g_debug("Found %d instances for AppID '%s'", int(instances.size()), std::string(appID).c_str());
 
@@ -315,39 +364,29 @@ std::vector<std::shared_ptr<instance::Base>> OpenRC::instances(const AppID& appI
 std::list<std::string> OpenRC::runningAppIds(const std::list<std::string>& allJobs)
 {
     // TODO: STUB
-    
+
     std::set<std::string> appids;
     return {appids.begin(), appids.end()};
 }
 
-std::string OpenRC::userBusPath()
+pid_t OpenRC::unitPrimaryPid(const AppID& appId, const std::string& job, const std::string& instance)
 {
-    auto cpath = getenv("UBUNTU_APP_LAUNCH_SYSTEMD_PATH");
-    if (cpath != nullptr)
-    {
-        return cpath;
-    }
-    return std::string{"/run/user/"} + std::to_string(getuid()) + std::string{"/bus"};
+    // TODO: STUB
+
+    return 0;
 }
 
-// pid_t OpenRC::unitPrimaryPid(const AppID& appId, const std::string& job, const std::string& instance)
-// {
-//     // TODO: STUB
-//     
-//     return 0;
-// }
-// 
-// std::vector<pid_t> OpenRC::unitPids(const AppID& appId, const std::string& job, const std::string& instance)
-// {
-//     // TODO: STUB
-//     
-//     return {};
-// }
-// 
-// void OpenRC::stopUnit(const AppID& appId, const std::string& job, const std::string& instance)
-// {
-//     // TODO: STUB
-// }
+std::vector<pid_t> OpenRC::unitPids(const AppID& appId, const std::string& job, const std::string& instance)
+{
+    // TODO: STUB
+
+    return {};
+}
+
+void OpenRC::stopUnit(const AppID& appId, const std::string& job, const std::string& instance)
+{
+    // TODO: STUB
+}
 
 core::Signal<const std::string&, const std::string&, const std::string&>& OpenRC::jobStarted()
 {
@@ -366,6 +405,47 @@ core::Signal<const std::string&, const std::string&, const std::string&, Registr
     // TODO: STUB
 
     return sig_jobFailed;
+}
+
+std::string OpenRC::findEnv(const std::string& value, std::list<std::pair<std::string, std::string>>& env)
+{
+    std::string retval;
+    auto entry = std::find_if(env.begin(), env.end(),
+                              [&value](std::pair<std::string, std::string>& entry) { return entry.first == value; });
+
+    if (entry != env.end())
+    {
+        retval = entry->second;
+    }
+
+    return retval;
+}
+
+void OpenRC::removeEnv(const std::string& value, std::list<std::pair<std::string, std::string>>& env)
+{
+    auto entry = std::find_if(env.begin(), env.end(),
+                              [&value](std::pair<std::string, std::string>& entry) { return entry.first == value; });
+
+    if (entry != env.end())
+    {
+        env.erase(entry);
+    }
+}
+
+int OpenRC::envSize(std::list<std::pair<std::string, std::string>>& env)
+{
+    int len = std::string{"Environment="}.length();
+
+    for (const auto& entry : env)
+    {
+        len += 3; /* two quotes, one space */
+        len += entry.first.length();
+        len += entry.second.length();
+    }
+
+    len -= 1; /* We account for a space each time but the first doesn't have */
+
+    return len;
 }
 
 std::vector<std::string> OpenRC::parseExec(std::list<std::pair<std::string, std::string>>& env)
