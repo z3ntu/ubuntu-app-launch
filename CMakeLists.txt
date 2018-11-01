@@ -114,31 +114,3 @@ if (${enable_tests})
   enable_testing ()
   add_subdirectory(tests)
 endif ()
-
-find_package(CoverageReport)
-set(filter-list)
-list(APPEND filter-list "/usr/include")
-list(APPEND filter-list "${CMAKE_SOURCE_DIR}/tests/*")
-if (NOT ${CMAKE_BINARY_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
-  list(APPEND filter-list "${CMAKE_BINARY_DIR}/*")
-endif()
-ENABLE_COVERAGE_REPORT(
-  TARGETS
-  	ubuntu-launcher
-	launcher-static
-  TESTS
-  	application-icon-finder-test
-	application-info-desktop-test
-	exec-util-test
-	failure-test
-	helper-test
-	helper-handshake-test
-	jobs-base-test
-	libual-test
-	libual-cpp-test
-	list-apps
-	snapd-info-test
-	zg-test
-  FILTER
-  	${filter-list}
-)
