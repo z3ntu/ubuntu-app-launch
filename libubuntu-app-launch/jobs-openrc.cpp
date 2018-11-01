@@ -334,8 +334,12 @@ std::shared_ptr<Application::Instance> OpenRC::launch(
         }
         env_c[env.size()+1] = NULL;  // end of arguments sentinel is NULL
 
-        /* Call the job start function */
-        execvpe(argv[0], (char **) argv, (char **) env_c);
+        pid_t child_pid = fork();
+        if(child_pid == 0) {
+            /* Call the job start function */
+            execvpe(argv[0], (char **) argv, (char **) env_c);
+            g_debug("execvpe failed from child.");
+        }
 
         tracepoint(ubuntu_app_launch, libual_start_message_sent, appIdStr.c_str());
 
