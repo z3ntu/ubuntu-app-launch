@@ -327,6 +327,7 @@ std::shared_ptr<Application::Instance> OpenRC::launch(
             envStr += "=";
             envStr += (*loop).second;
             argv.push_back(&envStr[0u]);
+            g_debug(argv.back());
         }
         envp.push_back(NULL);
 
@@ -334,7 +335,13 @@ std::shared_ptr<Application::Instance> OpenRC::launch(
         if(child_pid == 0) {
             /* Call the job start function */
             g_debug("argv[0]: %s", argv[0]);
-            execvpe(argv[0], &argv[0], &envp[0]);
+//             execvpe(argv[0], &argv[0], &envp[0]);
+
+            g_debug("DOING SOMETHING ELSE");
+            char *args2[] = { "system-settings", NULL }; /* Appears as `argv` in the main function */
+            char *env2[] = { "APP_DESKTOP_FILE_PATH=/usr/share/applications/ubuntu-system-settings.desktop", "APP_ID=ubuntu-system-settings", "DBUS_SESSION_BUS_ADDRESS=unix:path=/var/run/dbus/system_bus_socket", "MIR_SERVER_CURSOR=null", "XDG_RUNTIME_DIR=/tmp/0-runtime-dir", "QT_QPA_PLATFORM=wayland", "MIR_SOCKET=/tmp/0-runtime-dir/mir_socket", NULL }; /* Env variables, appears in var `environ` */
+            execvpe("system-settings", args2, env2);
+
             g_debug("execvpe failed from child.");
             g_debug("errno: %d", errno);
             g_debug(strerror(errno));

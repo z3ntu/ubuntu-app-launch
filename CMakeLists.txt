@@ -51,7 +51,7 @@ set(ubuntu_app_launch_arch "${UBUNTU_APP_LAUNCH_ARCH}")
 
 add_compile_options(
 # Because we believe in quality
-	-Wall -Werror
+	-Wall #-Werror
 	-g
 	-pthread
 )
