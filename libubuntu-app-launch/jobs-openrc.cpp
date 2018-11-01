@@ -274,9 +274,6 @@ std::shared_ptr<Application::Instance> OpenRC::launch(
             return nullptr;
         }
 
-//         std::vector<const char *> args(commands.size());
-//         std::transform(commands.begin(), commands.end(), args.begin(), std::mem_fun_ref(&std::string::c_str));
-
         /* Working Directory */
         if (!findEnv("APP_DIR", env).empty())
         {
@@ -314,34 +311,13 @@ std::shared_ptr<Application::Instance> OpenRC::launch(
         starting_handshake_wait(handshake);
         tracepoint(ubuntu_app_launch, handshake_complete, appIdStr.c_str());
 
-        // From https://stackoverflow.com/a/5797901
-        g_debug("argv:");
-//         const char **argv = new const char* [commands.size()+1];   // extra room for sentinel
-//         for (int j = 0;  j < (int)commands.size();  ++j) {     // copy args
-//                 argv [j] = commands[j].c_str();
-//                 g_debug(commands[j].c_str());
-//         }
-//         argv [commands.size()+1] = NULL;  // end of arguments sentinel is NULL
+        // From https://stackoverflow.com/a/7026414
         std::vector<char*> argv;
-        for(/*std::vector<std::string>::iterator*/auto loop = commands.begin(); loop != commands.end(); ++loop)
+        for(auto loop = commands.begin(); loop != commands.end(); ++loop)
         {
             argv.push_back(&(*loop)[0]);
         }
         argv.push_back(NULL);
-
-        // Convert env to C style
-//         const char **envp = new const char* [env.size()+1];   // extra room for sentinel
-//         int j = 0;
-//         for (auto elem : env) {
-//             std::string envVar;
-//             envVar += elem.first;
-//             envVar += "=";
-//             envVar += elem.second;
-//             g_debug(envVar.c_str());
-//             envp[j] = envVar.c_str();
-//             j++;
-//         }
-//         envp[env.size()+1] = NULL;  // end of arguments sentinel is NULL
 
         std::vector<char*> envp;
         for(auto loop = env.begin(); loop != env.end(); ++loop)
@@ -357,9 +333,7 @@ std::shared_ptr<Application::Instance> OpenRC::launch(
         pid_t child_pid = fork();
         if(child_pid == 0) {
             /* Call the job start function */
-            g_debug("argv[0]:");
-            g_debug(argv[0]);
-//             execvpe(argv[0], (char **) argv, (char **) envp);
+            g_debug("argv[0]: %s", argv[0]);
             execvpe(argv[0], &argv[0], &envp[0]);
             g_debug("execvpe failed from child.");
             g_debug("errno: %d", errno);
