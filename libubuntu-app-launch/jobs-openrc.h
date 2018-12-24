@@ -70,6 +70,8 @@ public:
     void stopUnit(const AppID& appId, const std::string& job, const std::string& instance);
 
 private:
+
+    std::vector<pid_t> launchedpids;
 //     std::string cgroup_root_;
 // 
 //     /** Connection to the User DBus bus */

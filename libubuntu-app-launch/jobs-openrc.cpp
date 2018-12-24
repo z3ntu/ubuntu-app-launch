@@ -347,6 +347,7 @@ std::shared_ptr<Application::Instance> OpenRC::launch(
             g_debug(strerror(errno));
         }
         g_debug("child_pid: %d", child_pid);
+        launchedpids.emplace_back(child_pid);
 
         tracepoint(ubuntu_app_launch, libual_start_message_sent, appIdStr.c_str());
 
@@ -366,7 +367,13 @@ std::vector<std::shared_ptr<instance::Base>> OpenRC::instances(const AppID& appI
 {
     // TODO: STUB
     g_debug("instances stub called...");
+    auto reg = getReg();
+
     std::vector<std::shared_ptr<instance::Base>> instances;
+    std::vector<Application::URL> urls;
+    std::string instance = "somestring";
+
+    instances.emplace_back(std::make_shared<instance::OpenRC>(appID, job, instance, urls, reg));
     g_debug("Found %d instances for AppID '%s'", int(instances.size()), std::string(appID).c_str());
 
     return instances;
@@ -391,7 +398,7 @@ std::vector<pid_t> OpenRC::unitPids(const AppID& appId, const std::string& job, 
 {
     // TODO: STUB
     g_debug("unitPids stub called...");
-    return {};
+    return launchedpids;
 }
 
 void OpenRC::stopUnit(const AppID& appId, const std::string& job, const std::string& instance)
