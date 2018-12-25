@@ -326,8 +326,8 @@ std::shared_ptr<Application::Instance> OpenRC::launch(
             envStr += (*loop).first;
             envStr += "=";
             envStr += (*loop).second;
-            argv.push_back(&envStr[0u]);
-            g_debug(argv.back());
+            envp.push_back(&envStr[0u]);
+            g_debug(envp.back());
         }
         envp.push_back(NULL);
 
