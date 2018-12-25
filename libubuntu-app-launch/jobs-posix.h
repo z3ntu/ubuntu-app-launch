@@ -38,11 +38,11 @@ namespace jobs
 namespace manager
 {
 
-class OpenRC : public Base
+class POSIX : public Base
 {
 public:
-    OpenRC(const std::shared_ptr<Registry::Impl>& registry);
-    virtual ~OpenRC();
+    POSIX(const std::shared_ptr<Registry::Impl>& registry);
+    virtual ~POSIX();
 
     virtual std::shared_ptr<Application::Instance> launch(
         const AppID& appId,

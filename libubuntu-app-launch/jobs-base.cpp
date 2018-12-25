@@ -29,7 +29,7 @@
 #include "helper-impl.h"
 #include "jobs-base.h"
 #include "jobs-systemd.h"
-#include "jobs-openrc.h"
+#include "jobs-posix.h"
 #include "registry-impl.h"
 #include "string-util.h"
 
@@ -60,8 +60,8 @@ std::shared_ptr<Base> Base::determineFactory(const std::shared_ptr<Registry::Imp
 {
 //     g_debug("Building a systemd jobs manager");
 //     return std::make_shared<jobs::manager::SystemD>(registry);
-    g_debug("Building a OpenRC jobs manager");
-    return std::make_shared<jobs::manager::OpenRC>(registry);
+    g_debug("Building a POSIX jobs manager");
+    return std::make_shared<jobs::manager::POSIX>(registry);
 }
 
 const std::list<std::string>& Base::getAllApplicationJobs() const

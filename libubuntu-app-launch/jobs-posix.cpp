@@ -17,7 +17,7 @@
  *     Ted Gould <ted.gould@canonical.com>
  */
 
-#include "jobs-openrc.h"
+#include "jobs-posix.h"
 #include "application-impl-base.h"
 #include "registry-impl.h"
 #include "second-exec-core.h"
@@ -48,19 +48,19 @@ namespace jobs
 namespace instance
 {
 
-class OpenRC : public instance::Base
+class POSIX : public instance::Base
 {
-    friend class manager::OpenRC;
+    friend class manager::POSIX;
 
 public:
-    explicit OpenRC(const AppID& appId,
+    explicit POSIX(const AppID& appId,
                      const std::string& job,
                      const std::string& instance,
                      const std::vector<Application::URL>& urls,
                      const std::shared_ptr<Registry::Impl>& registry);
-    virtual ~OpenRC()
+    virtual ~POSIX()
     {
-        g_debug("Destroying a OpenRC for '%s' instance '%s'", std::string(appId_).c_str(), instance_.c_str());
+        g_debug("Destroying a POSIX for '%s' instance '%s'", std::string(appId_).c_str(), instance_.c_str());
     }
 
     /* Query lifecycle */
@@ -70,33 +70,33 @@ public:
     /* Manage lifecycle */
     void stop() override;
 
-};  // class OpenRC
+};  // class POSIX
 
-OpenRC::OpenRC(const AppID& appId,
+POSIX::POSIX(const AppID& appId,
                  const std::string& job,
                  const std::string& instance,
                  const std::vector<Application::URL>& urls,
                  const std::shared_ptr<Registry::Impl>& registry)
     : Base(appId, job, instance, urls, registry)
 {
-    g_debug("Creating a new OpenRC for '%s' instance '%s'", std::string(appId).c_str(), instance.c_str());
+    g_debug("Creating a new POSIX for '%s' instance '%s'", std::string(appId).c_str(), instance.c_str());
 }
 
-pid_t OpenRC::primaryPid()
+pid_t POSIX::primaryPid()
 {
-    auto manager = std::dynamic_pointer_cast<manager::OpenRC>(registry_->jobs());
+    auto manager = std::dynamic_pointer_cast<manager::POSIX>(registry_->jobs());
     return manager->unitPrimaryPid(appId_, job_, instance_);
 }
 
-std::vector<pid_t> OpenRC::pids()
+std::vector<pid_t> POSIX::pids()
 {
-    auto manager = std::dynamic_pointer_cast<manager::OpenRC>(registry_->jobs());
+    auto manager = std::dynamic_pointer_cast<manager::POSIX>(registry_->jobs());
     return manager->unitPids(appId_, job_, instance_);
 }
 
-void OpenRC::stop()
+void POSIX::stop()
 {
-    auto manager = std::dynamic_pointer_cast<manager::OpenRC>(registry_->jobs());
+    auto manager = std::dynamic_pointer_cast<manager::POSIX>(registry_->jobs());
     manager->stopUnit(appId_, job_, instance_);
 }
 
@@ -111,18 +111,18 @@ namespace manager
 // static const char * SYSTEMD_DBUS_IFACE_UNIT{"org.freedesktop.systemd1.Unit"};
 // static const char* SYSTEMD_DBUS_IFACE_SERVICE{"org.freedesktop.systemd1.Service"};
 
-OpenRC::OpenRC(const std::shared_ptr<Registry::Impl>& registry)
+POSIX::POSIX(const std::shared_ptr<Registry::Impl>& registry)
     : Base(registry)
 {
     // TODO STUB
-    g_debug("OpenRC constructor stub called...");
+    g_debug("POSIX constructor stub called...");
 }
 
-OpenRC::~OpenRC()
+POSIX::~POSIX()
 {
 }
 
-void OpenRC::copyEnv(const std::string& envname, std::list<std::pair<std::string, std::string>>& env)
+void POSIX::copyEnv(const std::string& envname, std::list<std::pair<std::string, std::string>>& env)
 {
     if (!findEnv(envname, env).empty())
     {
@@ -143,7 +143,7 @@ void OpenRC::copyEnv(const std::string& envname, std::list<std::pair<std::string
     }
 }
 
-void OpenRC::copyEnvByPrefix(const std::string& prefix, std::list<std::pair<std::string, std::string>>& env)
+void POSIX::copyEnvByPrefix(const std::string& prefix, std::list<std::pair<std::string, std::string>>& env)
 {
     for (unsigned int i = 0; environ[i] != nullptr; i++)
     {
@@ -156,7 +156,7 @@ void OpenRC::copyEnvByPrefix(const std::string& prefix, std::list<std::pair<std:
     }
 }
 
-std::shared_ptr<Application::Instance> OpenRC::launch(
+std::shared_ptr<Application::Instance> POSIX::launch(
     const AppID& appId,
     const std::string& job,
     const std::string& instance,
@@ -171,10 +171,10 @@ std::shared_ptr<Application::Instance> OpenRC::launch(
     bool isApplication = std::find(appJobs.begin(), appJobs.end(), job) != appJobs.end();
 
     auto reg = getReg();
-    return reg->thread.executeOnThread<std::shared_ptr<instance::OpenRC>>([&]() -> std::shared_ptr<instance::OpenRC> {
-        auto manager = std::dynamic_pointer_cast<manager::OpenRC>(reg->jobs());
+    return reg->thread.executeOnThread<std::shared_ptr<instance::POSIX>>([&]() -> std::shared_ptr<instance::POSIX> {
+        auto manager = std::dynamic_pointer_cast<manager::POSIX>(reg->jobs());
         std::string appIdStr{appId};
-        g_debug("Initializing params for an new instance::OpenRC for: %s", appIdStr.c_str());
+        g_debug("Initializing params for an new instance::POSIX for: %s", appIdStr.c_str());
 
         tracepoint(ubuntu_app_launch, libual_start, appIdStr.c_str());
 
@@ -305,7 +305,7 @@ std::shared_ptr<Application::Instance> OpenRC::launch(
             }
         }
 
-        auto retval = std::make_shared<instance::OpenRC>(appId, job, instance, urls, reg);
+        auto retval = std::make_shared<instance::POSIX>(appId, job, instance, urls, reg);
 
         tracepoint(ubuntu_app_launch, handshake_wait, appIdStr.c_str());
         starting_handshake_wait(handshake);
@@ -359,15 +359,15 @@ std::shared_ptr<Application::Instance> OpenRC::launch(
     });
 }
 
-std::shared_ptr<Application::Instance> OpenRC::existing(const AppID& appId,
+std::shared_ptr<Application::Instance> POSIX::existing(const AppID& appId,
                                                          const std::string& job,
                                                          const std::string& instance,
                                                          const std::vector<Application::URL>& urls)
 {
-    return std::make_shared<instance::OpenRC>(appId, job, instance, urls, getReg());
+    return std::make_shared<instance::POSIX>(appId, job, instance, urls, getReg());
 }
 
-std::vector<std::shared_ptr<instance::Base>> OpenRC::instances(const AppID& appID, const std::string& job)
+std::vector<std::shared_ptr<instance::Base>> POSIX::instances(const AppID& appID, const std::string& job)
 {
     // TODO: STUB
     g_debug("instances stub called...");
@@ -377,13 +377,13 @@ std::vector<std::shared_ptr<instance::Base>> OpenRC::instances(const AppID& appI
     std::vector<Application::URL> urls;
     std::string instance = "somestring";
 
-    instances.emplace_back(std::make_shared<instance::OpenRC>(appID, job, instance, urls, reg));
+    instances.emplace_back(std::make_shared<instance::POSIX>(appID, job, instance, urls, reg));
     g_debug("Found %d instances for AppID '%s'", int(instances.size()), std::string(appID).c_str());
 
     return instances;
 }
 
-std::list<std::string> OpenRC::runningAppIds(const std::list<std::string>& allJobs)
+std::list<std::string> POSIX::runningAppIds(const std::list<std::string>& allJobs)
 {
     // TODO: STUB
     g_debug("runningAppIds stub called...");
@@ -391,46 +391,46 @@ std::list<std::string> OpenRC::runningAppIds(const std::list<std::string>& allJo
     return {appids.begin(), appids.end()};
 }
 
-pid_t OpenRC::unitPrimaryPid(const AppID& appId, const std::string& job, const std::string& instance)
+pid_t POSIX::unitPrimaryPid(const AppID& appId, const std::string& job, const std::string& instance)
 {
     // TODO: STUB
     g_debug("unitPrimaryPid stub called...");
     return 0;
 }
 
-std::vector<pid_t> OpenRC::unitPids(const AppID& appId, const std::string& job, const std::string& instance)
+std::vector<pid_t> POSIX::unitPids(const AppID& appId, const std::string& job, const std::string& instance)
 {
     // TODO: STUB
     g_debug("unitPids stub called...");
     return launchedpids;
 }
 
-void OpenRC::stopUnit(const AppID& appId, const std::string& job, const std::string& instance)
+void POSIX::stopUnit(const AppID& appId, const std::string& job, const std::string& instance)
 {
     // TODO: STUB
     g_debug("stopUnit stub called...");
 }
 
-core::Signal<const std::string&, const std::string&, const std::string&>& OpenRC::jobStarted()
+core::Signal<const std::string&, const std::string&, const std::string&>& POSIX::jobStarted()
 {
     /* Ensure we're connecting to the signals */
     return sig_jobStarted;
 }
 
-core::Signal<const std::string&, const std::string&, const std::string&>& OpenRC::jobStopped()
+core::Signal<const std::string&, const std::string&, const std::string&>& POSIX::jobStopped()
 {
     /* Ensure we're connecting to the signals */
     return sig_jobStopped;
 }
 
-core::Signal<const std::string&, const std::string&, const std::string&, Registry::FailureType>& OpenRC::jobFailed()
+core::Signal<const std::string&, const std::string&, const std::string&, Registry::FailureType>& POSIX::jobFailed()
 {
     // TODO: STUB
     g_debug("jobFailed stub called...");
     return sig_jobFailed;
 }
 
-std::string OpenRC::findEnv(const std::string& value, std::list<std::pair<std::string, std::string>>& env)
+std::string POSIX::findEnv(const std::string& value, std::list<std::pair<std::string, std::string>>& env)
 {
     std::string retval;
     auto entry = std::find_if(env.begin(), env.end(),
@@ -444,7 +444,7 @@ std::string OpenRC::findEnv(const std::string& value, std::list<std::pair<std::s
     return retval;
 }
 
-void OpenRC::removeEnv(const std::string& value, std::list<std::pair<std::string, std::string>>& env)
+void POSIX::removeEnv(const std::string& value, std::list<std::pair<std::string, std::string>>& env)
 {
     auto entry = std::find_if(env.begin(), env.end(),
                               [&value](std::pair<std::string, std::string>& entry) { return entry.first == value; });
@@ -455,7 +455,7 @@ void OpenRC::removeEnv(const std::string& value, std::list<std::pair<std::string
     }
 }
 
-int OpenRC::envSize(std::list<std::pair<std::string, std::string>>& env)
+int POSIX::envSize(std::list<std::pair<std::string, std::string>>& env)
 {
     int len = std::string{"Environment="}.length();
 
@@ -471,7 +471,7 @@ int OpenRC::envSize(std::list<std::pair<std::string, std::string>>& env)
     return len;
 }
 
-std::vector<std::string> OpenRC::parseExec(std::list<std::pair<std::string, std::string>>& env)
+std::vector<std::string> POSIX::parseExec(std::list<std::pair<std::string, std::string>>& env)
 {
     auto exec = findEnv("APP_EXEC", env);
     if (exec.empty())
