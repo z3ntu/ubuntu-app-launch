@@ -312,13 +312,17 @@ std::shared_ptr<Application::Instance> OpenRC::launch(
         tracepoint(ubuntu_app_launch, handshake_complete, appIdStr.c_str());
 
         // From https://stackoverflow.com/a/7026414
+        g_debug("PREPARING ARGV...");
         std::vector<char*> argv;
         for(auto loop = commands.begin(); loop != commands.end(); ++loop)
         {
             argv.push_back(&(*loop)[0]);
+            g_debug(argv.back());
         }
         argv.push_back(NULL);
 
+        g_debug("PREPARING ENVP...");
+        std::vector<std::string> envp_str;
         std::vector<char*> envp;
         for(auto loop = env.begin(); loop != env.end(); ++loop)
         {
@@ -326,21 +330,21 @@ std::shared_ptr<Application::Instance> OpenRC::launch(
             envStr += (*loop).first;
             envStr += "=";
             envStr += (*loop).second;
-            envp.push_back(&envStr[0u]);
-            g_debug(envp.back());
+            envp_str.push_back(envStr);
+            envp.push_back(&envp_str.back()[0]);
         }
         envp.push_back(NULL);
+
+        std::cout << "printing members of envp:" << std::endl;
+        for(char* n : envp) {
+            std::cout << n << std::endl;
+        }
 
         pid_t child_pid = fork();
         if(child_pid == 0) {
             /* Call the job start function */
             g_debug("argv[0]: %s", argv[0]);
-//             execvpe(argv[0], &argv[0], &envp[0]);
-
-            g_debug("DOING SOMETHING ELSE");
-            char *args2[] = { "system-settings", NULL }; /* Appears as `argv` in the main function */
-            char *env2[] = { "APP_DESKTOP_FILE_PATH=/usr/share/applications/ubuntu-system-settings.desktop", "APP_ID=ubuntu-system-settings", "DBUS_SESSION_BUS_ADDRESS=unix:path=/var/run/dbus/system_bus_socket", "MIR_SERVER_CURSOR=null", "XDG_RUNTIME_DIR=/tmp/0-runtime-dir", "QT_QPA_PLATFORM=wayland", "MIR_SOCKET=/tmp/0-runtime-dir/mir_socket", NULL }; /* Env variables, appears in var `environ` */
-            execvpe("system-settings", args2, env2);
+            execvpe(argv[0], &argv[0], &envp[0]);
 
             g_debug("execvpe failed from child.");
             g_debug("errno: %d", errno);
