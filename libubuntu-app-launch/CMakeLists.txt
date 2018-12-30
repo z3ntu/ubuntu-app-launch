@@ -72,6 +72,8 @@ jobs-base.h
 jobs-base.cpp
 jobs-systemd.h
 jobs-systemd.cpp
+jobs-posix.h
+jobs-posix.cpp
 signal-unsubscriber.h
 snapd-info.h
 snapd-info.cpp
